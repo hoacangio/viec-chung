@@ -17,7 +17,7 @@ App việc nhà và danh sách mua sắm cho hai vợ chồng. Dữ liệu đồ
 
 ### 1. Supabase (5 phút)
 1. Vào [supabase.com](https://supabase.com) → **New project**, chọn region **Singapore**.
-2. **SQL Editor** → **New query** → dán toàn bộ `supabase/migrations/0001_init.sql` → **Run**.
+2. **SQL Editor** → **New query** → dán và **Run** lần lượt từng file trong `supabase/migrations/` theo thứ tự số (`0001_…`, `0002_…`). Đã chạy file cũ rồi thì chỉ chạy các file mới.
 3. **Authentication → Sign In / Providers → Email**: tắt **Confirm email** để đăng ký xong dùng được ngay. Nếu muốn giữ bước xác nhận email thì bỏ qua bước này.
 4. **Project Settings → API Keys**: copy **Project URL** và **anon / publishable key**. Tuyệt đối không dùng key `service_role` / secret.
 
@@ -59,7 +59,7 @@ npm test                     # parser giờ tiếng Việt + nhóm danh sách (2
 Test RLS cần một Postgres trống (CI tự chạy bằng service `postgres:16`):
 ```bash
 psql -f supabase/tests/_local_auth_stub.sql   # CHỈ dùng cho DB test, không chạy trên Supabase thật
-psql -f supabase/migrations/0001_init.sql
+for f in supabase/migrations/*.sql; do psql -f "$f"; done
 psql -f supabase/tests/rls_test.sql           # → ALL RLS TESTS PASSED
 ```
 

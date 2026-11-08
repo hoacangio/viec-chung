@@ -42,7 +42,7 @@ jobs:
       - name: Apply migration and run RLS tests
         run: |
           psql -v ON_ERROR_STOP=1 -q -f supabase/tests/_local_auth_stub.sql
-          psql -v ON_ERROR_STOP=1 -q -f supabase/migrations/0001_init.sql
+          for f in supabase/migrations/*.sql; do psql -v ON_ERROR_STOP=1 -q -f "$f"; done
           psql -v ON_ERROR_STOP=1 -q -f supabase/tests/rls_test.sql
 
   app:
