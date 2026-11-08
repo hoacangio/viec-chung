@@ -48,6 +48,9 @@ export function useItems(householdId: string) {
       });
     const filter = `household_id=eq.${householdId}`;
 
+    // Load right away; never make the list depend on the realtime socket coming up.
+    fetchAll();
+
     const channel = supabase
       .channel(`items:${householdId}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'items', filter }, (p) =>

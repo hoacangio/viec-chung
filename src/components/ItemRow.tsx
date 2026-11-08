@@ -47,7 +47,7 @@ function ItemRowImpl({ item, members, expanded, onToggleExpand, onToggleDone, on
           {(due || doneBy) && (
             <Text style={styles.meta}>
               {item.done && doneBy
-                ? `${doneBy.display_name} đã xong`
+                ? `${doneBy.display_name} ${item.kind === 'shopping' ? 'đã mua' : 'đã xong'}`
                 : due
                   ? <Text style={due.overdue ? styles.overdue : undefined}>{due.text}</Text>
                   : null}

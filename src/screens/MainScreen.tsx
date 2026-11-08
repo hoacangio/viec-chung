@@ -27,7 +27,8 @@ export function MainScreen({ userId, household, members, reload }: Props) {
   const [filter, setFilter] = useState<string>('all');
   const [showDone, setShowDone] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [inviteOpen, setInviteOpen] = useState(false);
+  // Open the invite panel by default while the partner hasn't joined yet.
+  const [inviteOpen, setInviteOpen] = useState(members.length < 2);
   const [refreshing, setRefreshing] = useState(false);
 
   const { sections, doneCount } = useMemo(
@@ -76,7 +77,7 @@ export function MainScreen({ userId, household, members, reload }: Props) {
           />
         </View>
 
-        {(inviteOpen || alone) && (
+        {inviteOpen && (
           <InvitePanel household={household} alone={alone} onChanged={reload} />
         )}
 
