@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  logic:
+    name: Parser & list logic
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Unit tests (no install needed)
+        env:
+          TZ: Asia/Ho_Chi_Minh
+        run: npx --yes tsx --test src/lib/*.test.ts
+
+  database:
+    name: Migration + RLS
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply migration and run RLS tests
+        run: |
+          psql -v ON_ERROR_STOP=1 -q -f supabase/tests/_local_auth_stub.sql
+          psql -v ON_ERROR_STOP=1 -q -f supabase/migrations/0001_init.sql
+          psql -v ON_ERROR_STOP=1 -q -f supabase/tests/rls_test.sql
+
+  app:
+    name: Typecheck + web build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Skipped until scripts/setup.sh has been run once and package-lock.json committed.
+      - id: lock
+        run: echo "present=$([ -f package-lock.json ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+      - if: steps.lock.outputs.present == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - if: steps.lock.outputs.present == 'true'
+        run: npm ci
+      - if: steps.lock.outputs.present == 'true'
+        run: npx tsc --noEmit
+      - if: steps.lock.outputs.present == 'true'
+        name: Export web bundle
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+        run: npx expo export --platform web
+      - if: steps.lock.outputs.present == 'true'
+        run: npm audit --omit=dev --audit-level=high
